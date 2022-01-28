@@ -7,6 +7,10 @@ name = "pypi"
 fastapi = "*"
 uvicorn = {extras = ["standard"], version = "*"}
 notion-client = "*"
+google-api-python-client = "*"
+google-auth-httplib2 = "*"
+google-auth-oauthlib = "*"
+pymongo = {extras = ["srv"], version = "*"}
 
 [dev-packages]
 autopep8 = "*"

@@ -4,13 +4,13 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-fastapi = "*"
-uvicorn = {extras = ["standard"], version = "*"}
 notion-client = "*"
 google-api-python-client = "*"
 google-auth-httplib2 = "*"
 google-auth-oauthlib = "*"
-pymongo = {extras = ["srv"], version = "*"}
+pytest = "*"
+mongomantic = "*"
+pymongo = "*"
 
 [dev-packages]
 autopep8 = "*"

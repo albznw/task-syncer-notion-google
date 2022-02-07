@@ -3,7 +3,6 @@ from os import path
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
-from googleapiclient.discovery import build
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = ['https://www.googleapis.com/auth/tasks']
@@ -13,8 +12,8 @@ creds = None
 # created automatically when the authorization flow completes for the first
 # time.
 
-dirname = path.dirname(__file__)
-credentials_path = path.join(dirname, "app/google_api_credentials.json")
+dirname = f"{path.dirname(__file__)}/app"
+credentials_path = path.join(dirname, "google_api_credentials.json")
 token_path = path.join(dirname, "token.json")
 if path.exists(credentials_path) and path.exists(token_path):
     creds = Credentials.from_authorized_user_file(token_path, SCOPES)

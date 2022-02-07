@@ -71,7 +71,11 @@ class BaseSettings():
     notion_secret: str
     notion_task_db: str
     notion_bucket_db: str
-    notion_settings: dict
+
+    # Google
+    google_default_tasklist: str
+
+
 class TestSettings():
 
     def __init__(self):
@@ -92,7 +96,8 @@ class TestSettings():
         self.notion_task_db: str = env.get("NOTION_TASK_DB")
         self.notion_bucket_db: str = env.get("NOTION_BUCKET_DB")
 
-        self.notion_settings = {}
+        # Google
+        self.google_default_tasklist = env.get("GOOGLE_DEFAULT_TASKLIST")
 
 if os.environ.get("ENV") == "TEST":
     settings = TestSettings()

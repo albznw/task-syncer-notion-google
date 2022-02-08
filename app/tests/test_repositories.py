@@ -36,3 +36,5 @@ class TestGoogleTaskRepository:
 
         assert isinstance(saved_task, GoogleTask)
         assert saved_task.dict(exclude={"id"}) == task_before_save.dict(exclude={"id"})
+
+        task_before_save.google_delete()

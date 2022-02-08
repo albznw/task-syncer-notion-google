@@ -65,7 +65,7 @@ class NotionTagBase(NotionBaseModel):
         @property
         def notion_field_name(self) -> str:
             raise NotImplementedError
-        
+
         @property
         def notion_field_type(self) -> str:
             raise NotImplementedError
@@ -119,7 +119,7 @@ class NotionDatabaseModel(NotionBaseModel):
         def model(self) -> Type[NotionBaseModel]:
             """Model class that subclasses NotionBaseModel"""
             raise NotImplementedError
-        
+
         @property
         def database_id(self) -> str:
             """The Notion database ID related to this model"""
@@ -150,7 +150,7 @@ class NotionDatabaseModel(NotionBaseModel):
                     yield self.Meta.model.from_notion(task)
                 except:
                     yield task
-            
+
             if db_res["has_more"]:
                 db_res = notion_client.databases.query(
                     self.Meta.database_id,
@@ -179,7 +179,7 @@ class NotionTime(NotionBaseModel):
     has_time: bool = True
 
     @classmethod
-    def from_date(cls, d:date=None):
+    def from_date(cls, d: date = None):
         return cls(dt=datetime.combine(date=d, time=time(second=0)), has_time=False)
 
     @classmethod
@@ -198,14 +198,20 @@ class NotionTime(NotionBaseModel):
             return self.dt.isoformat()
         return self.dt.date().strftime("%Y-%m-%d")
 
+    def datetime(self):
+        return self.dt
+
     def __repr__(self):
         return self.dt
 
     def __str__(self) -> str:
         return self.dt.isoformat()
 
-    def __eq__(self, other) -> bool:
-        return self.dt == other.dt and self.has_time == other.has_time
+    def __gt__(self, other):
+        return self.dt > other.dt
+
+    def __eq__(self, other):
+        return self.dt == other.dt
 
 class NotionBucket(NotionBaseModel):
     # Notion fields
@@ -245,12 +251,20 @@ class NotionTask(NotionBaseModel):
     # Metafields
     database_id: str
     synced: datetime | None = None
+    google_id: str | None = None
+
+    class Meta:
+        internal_fields = ["database_id", "synced", "google_id", "id"]
+
 
     @classmethod
-    def from_notion(cls, response):
+    def notion_to_kwargs(cls, response: dict) -> dict:
+        """Converts the response from Notion to a dict that can be passed to a
+        NotionTask as keyword arguments
+        """
         bucket_id = None
         if tmp := response["properties"]["Bucket"]["relation"]:
-            bucket_id = tmp[0]["id"].replace("-", "")
+            bucket_id = tmp[0]["id"]
 
         notes = None
         if tmp := response["properties"]["Notes"]["rich_text"]:
@@ -264,12 +278,12 @@ class NotionTask(NotionBaseModel):
         subtask_ids = []
         if tmp := response["properties"]["Subtasks"]["relation"]:
             for task_id in tmp:
-                subtask_ids.append(task_id["id"].replace("-", ""))
+                subtask_ids.append(task_id["id"])
 
         parent_task_ids = []
         if tmp := response["properties"]["Parent task"]["relation"]:
             for task_id in tmp:
-                parent_task_ids.append(task_id["id"].replace("-", ""))
+                parent_task_ids.append(task_id["id"])
 
         params = {
             "notion_id": response["id"],
@@ -282,10 +296,122 @@ class NotionTask(NotionBaseModel):
             "parent_task_ids": parent_task_ids,
             "due": due,
             "updated": NotionTime.from_notion(response["last_edited_time"].replace("Z", "")),
-            "database_id": response["parent"]["database_id"].replace("-", "")
+            "database_id": response["parent"]["database_id"]
         }
+
+        return params
+    
+    def to_notion_kwargs(self) -> dict:
+        """Returns a dict with a dict that can be used to update the task on
+        Notion"""
+        kwargs = {
+            "properties": {
+                "Task": {
+                    "title": [{
+                        "type": "text",
+                        "text": {
+                            "content": self.title
+                        }
+                    }]
+                },
+                "Status": {
+                    "select": self.status.to_notion() if self.status else None
+                },
+                "Labels": {
+                    "multi_select": [label.to_notion() for label in self.labels]
+                },
+            },
+            "parent": {
+                "database_id": self.database_id
+            }
+        }
+
+        content = []
+        if self.notes:
+            content = [{
+                "type": "text",
+                "text": {
+                    "content": self.notes
+                }
+            }]
+
+        due = None
+        if self.due:
+            due = {"start": self.due.to_notion()}
+
+        parent_tasks = []
+        if self.parent_task_ids:
+            parent_tasks = [{"id": task_id}
+                            for task_id in self.parent_task_ids]
+
+        subtasks = []
+        if self.subtask_ids:
+            subtasks = [{"id": task_id} for task_id in self.subtask_ids]
+
+        bucket = []
+        if self.bucket_id:
+            bucket = [{"id": self.bucket_id}]
+
+        kwargs["properties"] = kwargs["properties"] | {
+            "Notes": {
+                "rich_text": content
+            },
+            "Due": {"date": due},
+            "Parent task": {
+                "relation": parent_tasks
+            },
+            "Subtasks": {
+                "relation": subtasks
+            },
+            "Bucket": {
+                "relation": bucket
+            },
+        }
+
+        return kwargs
+
+    def notion_save(self):
+        """Saves the task to Notion
+
+        Returns:
+            [NotionTask]: A new instance of the NotionTask
+        """
+        if self.notion_id:
+            notion_res = notion_client.pages.update(
+                self.notion_id, **self.to_notion_kwargs())
+        else:
+            notion_res = notion_client.pages.create(**self.to_notion_kwargs())
+
+        new_params = self.notion_to_kwargs(notion_res)
+        old_params = self.dict()
+
+        for field in self.Meta.internal_fields:
+            new_params[field] = old_params[field]
         
-        return cls(**params)
+        updated_task = NotionTask.from_dict(new_params)
+        return updated_task
+
+    def notion_delete(self):
+        """Deletes the task in Notion"""
+        return notion_client.blocks.delete(self.notion_id)
+
+    def get_parent(self):
+        """Returns the parent NotionTask"""
+        if self.parent_task_ids:
+            res = notion_client.pages.retrieve(self.parent_task_ids[0])
+            return self.from_notion(res)
+
+    def fetch(self):
+        """Fetches this NotionTask from Notion and returns an updated version"""
+        notion_res = notion_client.pages.retrieve(self.notion_id)
+        new_params = self.notion_to_kwargs(notion_res)
+        old_params = self.dict()
+
+        for field in self.Meta.internal_fields:
+            new_params[field] = old_params[field]
+        
+        updated_task = NotionTask.from_dict(new_params)
+        return updated_task
 
 class NotionTasks(NotionDatabaseModel):
     class Meta:

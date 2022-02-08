@@ -66,6 +66,8 @@ class TestGoogleTask:
         with pytest.raises(RuntimeError):
             child_task.move(parent_id)
 
+        child_task.google_delete()
+
     def test_update_fields(self):
         task = test_task_template.google_save()
 

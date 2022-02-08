@@ -4,7 +4,7 @@ from os import path
 from datetime import date, datetime, time, timedelta, timezone
 
 from app.models.notion import NotionTask, NotionTasks, NotionTime, NotionDatabaseModel
-from app.tests.fixtures import parent_params, setup_notion_test_tasks
+from app.tests.fixtures.notion import parent_params, setup_notion_test_tasks
 from app.config import settings
 
 

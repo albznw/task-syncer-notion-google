@@ -1,7 +1,8 @@
 from app.models.mongo import GoogleTaskRepository, NotionTaskRepository
-from app.tests.fixtures import mongo_fixture, setup_notion_test_tasks
-from app.models.notion import NotionTask, NotionTasks
+from app.tests.fixtures import mongo_fixture
+from app.tests.fixtures.notion import setup_notion_test_tasks
 from app.models.google import GoogleStatus, GoogleTask
+from app.models.notion import NotionTask
 from app.config import settings
 
 class TestNotionTaskRepository:

@@ -31,32 +31,6 @@ def read_notion_config() -> dict:
 
     return notion_settings
 
-    
-class Settings():
-    # Logger
-    logger: logging.Logger
-    app_name: str = "TaskSyncer Notion-Google"
-
-    # MongoDB
-    mongo_db_username: str
-    mongo_db_password: str
-
-    # Notion
-    notion_secret: str
-    notion_task_db: str
-    notion_bucket_db: str
-    notion_settings: dict
-
-    def __init__(self):
-        print("PRODUCTION SETTINGS")
-        print("Loading .env")
-        env = dotenv_values(".env")
-
-        self.logger = setup_logger()
-        self.logger.info("Setting up...")
-        self.notion_settings = read_notion_config()
-        self.logger.info("Done")
-
 
 class BaseSettings():
     # Logger
@@ -76,6 +50,33 @@ class BaseSettings():
 
     # Google
     google_default_tasklist: str
+
+
+class Settings():
+    def __init__(self):
+        print("PRODCUTION SETTINGS")
+        print("Loading .env")
+        env = dotenv_values(".env")
+
+        self.logger = setup_logger()
+        self.logger.info("Setting up production environment...")
+        self.app_name = "TaskSyncer Notion-Google"
+
+        # Mongo credentials
+        self.mongo_username: str = env.get("MONGO_USERNAME")
+        self.mongo_password: str = env.get("MONGO_PASSWORD")
+        self.mongo_url: str = env.get("MONGO_URL")
+        self.mongo_db: str = env.get("MONGO_DB")
+
+        # Notion
+        self.notion_secret: str = env.get("NOTION_SECRET")
+        self.notion_task_db: str = env.get("NOTION_TASK_DB")
+        self.notion_bucket_db: str = env.get("NOTION_BUCKET_DB")
+
+        # Google
+        self.google_default_tasklist = env.get("GOOGLE_DEFAULT_TASKLIST")
+        
+        self.logger.info("Done")
 
 
 class TestSettings():

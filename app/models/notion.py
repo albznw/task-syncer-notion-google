@@ -57,7 +57,7 @@ class NotionBaseModel(MongoDBModel):
 
 
 class NotionTagBase(NotionBaseModel):
-    id: str
+    notion_id: str
     name: str
     color: str
 
@@ -89,7 +89,7 @@ class NotionTagBase(NotionBaseModel):
 
         def _create_item(item: dict):
             return cls(**{
-                "id": item["id"].replace("-", ""),
+                "notion_id": item["id"],
                 "name": item["name"],
                 "color": item["color"]
             })
@@ -103,10 +103,13 @@ class NotionTagBase(NotionBaseModel):
                 items.append(_create_item(item))
             return items
 
-        raise RuntimeError
+        return None
 
     def to_notion(self) -> dict:
-        return self.dict()
+        new_dict = self.dict()
+        new_dict["id"] = new_dict.pop("notion_id")
+        return new_dict
+
 
 class NotionDatabaseModel(NotionBaseModel):
     title: str | None = None
@@ -125,7 +128,7 @@ class NotionDatabaseModel(NotionBaseModel):
     @classmethod
     def from_notion(cls, response):
         title = response["title"][0]["plain_text"]
-        id = response["id"].replace("-", "")
+        id = response["id"]
         new_instance = cls(title=title)
         new_instance.Meta.database_id = id
         new_instance.Meta.model = None
@@ -269,7 +272,7 @@ class NotionTask(NotionBaseModel):
                 parent_task_ids.append(task_id["id"].replace("-", ""))
 
         params = {
-            "notion_id": response["id"].replace("-", ""),
+            "notion_id": response["id"],
             "title": response["properties"]["Task"]["title"][0]["plain_text"],
             "status": NotionStatus.from_notion(response["properties"]["Status"]["select"]),
             "labels": NotionLabel.from_notion(response["properties"]["Labels"]["multi_select"]),

@@ -287,7 +287,7 @@ class NotionTask(NotionBaseModel):
         
         return cls(**params)
 
-class NotionTaskDB(NotionDatabaseModel):
+class NotionTasks(NotionDatabaseModel):
     class Meta:
         model = NotionTask
         database_id = settings.notion_task_db
@@ -299,6 +299,10 @@ class NotionTaskDB(NotionDatabaseModel):
     def get(cls, id: str, **kwargs):
         page_res = notion_client.pages.retrieve(id, **kwargs)
         # Check that it actually comes from the db
+        assert page_res["parent"]["database_id"] == cls.Meta.database_id
+        return cls.Meta.model.from_notion(page_res)
+
+
 class NotionBuckets(NotionDatabaseModel):
     class Meta:
         model = NotionBucket

@@ -195,7 +195,12 @@ class NotionTime(NotionBaseModel):
 
     def to_notion(self):
         if self.has_time:
-            return self.dt.isoformat()
+            # Make sure timezone is correct
+            if self.dt.tzinfo:
+                return self.dt.isoformat()
+            else:
+                timestamp = self.dt.astimezone().replace(hour=(self.dt.hour + 1))
+                return timestamp.isoformat()
         return self.dt.date().strftime("%Y-%m-%d")
 
     def datetime(self):

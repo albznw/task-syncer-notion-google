@@ -8,14 +8,19 @@ from app.config import settings
 class TestNotionTaskRepository:
     def test_mongo(self, mongo_fixture, setup_notion_test_tasks):
         task_before_save, _ = setup_notion_test_tasks
-        NotionTaskRepository.save(task_before_save)
+        task_after_save = NotionTaskRepository.save(task_before_save)
 
-        task_gen = NotionTaskRepository.find()
-        mongo_tasks = [t for t in task_gen]
+        assert task_after_save.dict(exclude={"id"}) == task_before_save.dict(exclude={"id"})
 
-        assert len(mongo_tasks) == 1
-        assert isinstance(mongo_tasks[0], NotionTask)
-        assert mongo_tasks[0].dict(exclude={"id"}) == task_before_save.dict(exclude={"id"})
+        internal_tasks = list(NotionTaskRepository.find())
+        assert len(internal_tasks) == 1
+        assert isinstance(internal_tasks[0], NotionTask)
+
+        # MongoDB Fetched task, should have the same values
+        assert internal_tasks[0].dict(exclude={"id", "due"}) == task_after_save.dict(exclude={"id", "due"})
+        assert internal_tasks[0].to_notion_kwargs() == task_after_save.to_notion_kwargs()
+
+
 
 
 class TestGoogleTaskRepository:

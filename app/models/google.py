@@ -70,11 +70,13 @@ class GoogleTask(MongoDBModel):
 
     # Metafields
     synced: datetime | None = None
+    notion_id: str | None = None
+
     class Meta:
         google_fields = [
             "title", "due", "notes", "status", "parent", "updated"
         ]
-        internal_fields = ["id", "synced"]
+        internal_fields = ["id", "synced", "notion_id"]
 
     @classmethod
     def google_to_kwargs(cls, tasklist_id: str, response: dict) -> dict:

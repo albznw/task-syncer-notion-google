@@ -179,6 +179,36 @@ class GoogleTask(MongoDBModel):
 
         except:
             raise RuntimeError("Invalid parent id")
+    
+    def update_from_params(self, params: dict):
+        """Takes a set of params that will override the current fields in a new
+        instance of this class.
+
+        Note this function does not update Notion nor does it update the mongo
+        db.
+        
+        Returns:
+            [GoogleTask]: An updated instance of this task
+        """
+        new_params = self.dict()
+
+        for field in params.keys():
+            new_params[field] = params[field]
+
+        return self.from_dict(new_params)
+
+    def fetch(self):
+        """Fetches this GoogleTask from Google and returns an updated version"""
+        google_res = client.tasks().get(tasklist=self.tasklist, task=self.google_id).execute()
+        new_params = self.google_to_kwargs(self.tasklist, google_res)
+        old_params = self.dict()
+
+        for field in self.Meta.internal_fields:
+            new_params[field] = old_params[field]
+
+        updated_task = GoogleTask.from_dict(new_params)
+        return updated_task
+
 class GoogleTaskLists(MongoDBModel):
 
     class Meta:

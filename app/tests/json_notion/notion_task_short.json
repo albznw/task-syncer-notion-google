@@ -1,0 +1,65 @@
+{
+    "parent": {
+        "database_id": "cd37b7ae-0446-4d14-8b41-c024fb16010e"
+    },
+    "properties": {
+        "Status": {
+            "select": {
+                "id": "c062eac1-aff7-4c30-b4bb-76656a4c5495",
+                "name": "ToDo",
+                "color": "red"
+            }
+        },
+        "Parent task": {
+            "relation": []
+        },
+        "Labels": {
+            "multi_select": [
+                {
+                    "id": "53a0fc9c-a186-4363-a6dc-0229aad1ba7d",
+                    "name": "High Effort",
+                    "color": "pink"
+                }
+            ]
+        },
+        "Bucket": {
+            "relation": [
+                {
+                    "id": "3c7cd227-760a-4cf5-a867-c05c68b68c80"
+                }
+            ]
+        },
+        "Subtasks": {
+            "relation": [
+                {
+                    "id": "403ad2bf-d2da-4478-84b8-1c3bc58c90d8"
+                }
+            ]
+        },
+        "Notes": {
+            "rich_text": [
+                {
+                    "type": "text",
+                    "text": {
+                        "content": "Test notes 🎉"
+                    }
+                }
+            ]
+        },
+        "Due": {
+            "date": {
+                "start": "2022-02-12T13:00:00+01:00"
+            }
+        },
+        "Task": {
+            "title": [
+                {
+                    "type": "text",
+                    "text": {
+                        "content": "Test parent task"
+                    }
+                }
+            ]
+        }
+    }
+}

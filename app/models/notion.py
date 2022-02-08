@@ -433,7 +433,6 @@ class NotionTasks(NotionDatabaseModel):
         assert page_res["parent"]["database_id"] == cls.Meta.database_id
         return cls.Meta.model.from_notion(page_res)
 
-
 class NotionBuckets(NotionDatabaseModel):
     class Meta:
         model = NotionBucket

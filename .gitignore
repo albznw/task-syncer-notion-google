@@ -129,4 +129,5 @@ dmypy.json
 .pyre/
 
 # Personal token
-token.json
+**/token.json
+**/google_api_credentials.json

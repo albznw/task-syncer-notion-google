@@ -10,6 +10,7 @@ from app.config import settings
 notion_client = NotionClient(auth=settings.notion_secret)
 notion_tasks_db_id = settings.notion_task_db
 
+
 class NotionBaseModel(MongoDBModel):
 
     class Config:
@@ -21,6 +22,38 @@ class NotionBaseModel(MongoDBModel):
 
     def to_notion(self):
         raise NotImplementedError
+
+    @classmethod
+    def notion_to_kwargs(cls, response: dict) -> dict:
+        raise NotImplementedError
+
+    @classmethod
+    def from_notion(cls, response: dict):
+        """Creates an instance from a Notion task response"""
+        return cls(**cls.notion_to_kwargs(response))
+
+    @classmethod
+    def from_dict(cls, params: dict):
+        """Creates an instance from a dictionary containing NotionTask
+        params"""
+        return cls(**params)
+
+    def update_from_params(self, params: dict):
+        """Takes a set of params that will override the current fields in a new
+        instance of this class.
+
+        Note this function does not update Notion nor does it update the mongo
+        db.
+
+        Returns:
+            [NotionBaseModel]: An updated instance of this task
+        """
+        new_params = self.dict()
+
+        for field in params.keys():
+            new_params[field] = params[field]
+
+        return self.from_dict(new_params)
 
 
 class NotionTagBase(NotionBaseModel):

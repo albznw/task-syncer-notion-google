@@ -52,6 +52,11 @@ class GoogleStatus(str, Enum):
     done = "completed"
     todo = "needsAction"
 
+
+class GoogleTaskList(MongoDBModel):
+    tasklist: str
+    title: str
+
 class GoogleTask(MongoDBModel):
     tasklist: str
     title: str
@@ -174,11 +179,44 @@ class GoogleTask(MongoDBModel):
 
         except:
             raise RuntimeError("Invalid parent id")
+class GoogleTaskLists(MongoDBModel):
+
+    class Meta:
+        model: GoogleTaskList = GoogleTaskList
+
+    @classmethod
+    def list(cls, **kwargs):
+        """Returns a generator function of the task lists in Google
+        
+        Yields:
+            [GoogleTaskList]: One task list at a time
+        """
+        res = client.tasklists().list(maxResults=100, **kwargs).execute()
+        if items := res.get("items"):
+            for tasklist in items:
+                yield cls.Meta.model(
+                    tasklist=tasklist["id"],
+                    title=tasklist["title"]
+                )
+
+    @classmethod
+    def get(cls, id:str=None, title:str=None) -> GoogleTaskList:
+        if id:
+            res = client.tasklists().get(tasklist=id).execute()
+            return cls.Meta.model(
+                tasklist=res["id"],
+                title=res["title"]
+            )
+
+        for tasklist in cls.list():
+            if tasklist.title == title:
+                return tasklist
+
 
 class GoogleTasks(MongoDBModel):
     class Meta:
         model: GoogleTask = GoogleTask
-        tasklist_ids: List[str] = fetch_google_tasklis_ids()
+        tasklists: List[GoogleTaskList] = list(GoogleTaskLists().list())
 
     @classmethod
     def list(cls, tasklist_id:str= None, **kwargs):
@@ -186,16 +224,19 @@ class GoogleTasks(MongoDBModel):
         no tasklist is specified all tasks are returned.
 
         Yields:
-            [GoogleTask]:
+            [GoogleTask]: On task at a time
         """
-        tasklists = [tasklist_id] if tasklist_id else cls.Meta.tasklist_ids
+        if tasklist_id:
+            tasklists_ids = [tasklist_id]
+        else:
+            tasklists_ids = [tasklist.tasklist for tasklist in cls.Meta.tasklists]
 
-        for list_id in tasklists:
-            google_res = client.tasks().list(tasklist=list_id, maxResults=100, **kwargs).execute()
+        for tasklist_id in tasklists_ids:
+            google_res = client.tasks().list(tasklist=tasklist_id, maxResults=100, **kwargs).execute()
             if google_res.get("items"):
                 for task in google_res["items"]:
                     yield cls.Meta.model.from_google(
-                        tasklist_id=list_id, google_task=task)
+                        tasklist_id=tasklist_id, google_task=task)
             else:
                 return []
     

@@ -77,22 +77,22 @@ class GoogleTask(MongoDBModel):
         internal_fields = ["id", "synced"]
 
     @classmethod
-    def kwargs_from_google(cls, tasklist_id: str, google_task: dict) -> dict:
+    def google_to_kwargs(cls, tasklist_id: str, response: dict) -> dict:
         """Creates a GoogleTask form the Google task response
 
         Args:
             tasklist_id (str): Tasklist id
-            google_task (dict): The Google task response
+            response (dict): The Google task response
         """
         params = {
-            "google_id": google_task["id"],
+            "google_id": response["id"],
             "tasklist": tasklist_id
         }
 
         for field_name in cls.Meta.google_fields:
-            if google_field := google_task.get(field_name):
+            if google_field := response.get(field_name):
                 if field_name in ["due", "updated"]:
-                    params[field_name] = to_python_timestamp(google_task[field_name])
+                    params[field_name] = to_python_timestamp(response[field_name])
                 else:
                     params[field_name] = google_field
 
@@ -101,7 +101,7 @@ class GoogleTask(MongoDBModel):
     @classmethod
     def from_google(cls, tasklist_id: str, google_task: dict):
         """Creates a GoogleTask from the google task response"""
-        return cls(**cls.kwargs_from_google(tasklist_id=tasklist_id, google_task=google_task))
+        return cls(**cls.google_to_kwargs(tasklist_id, google_task))
 
     @classmethod
     def from_dict(cls, params:dict):
@@ -133,7 +133,7 @@ class GoogleTask(MongoDBModel):
             # Create the task
             res = client.tasks().insert(tasklist=self.tasklist, body=body, parent=self.parent).execute()
         
-        new_params = self.kwargs_from_google(self.tasklist, res)
+        new_params = self.google_to_kwargs(self.tasklist, res)
         old_params = self.dict()
 
         for field in self.Meta.internal_fields:
@@ -169,7 +169,7 @@ class GoogleTask(MongoDBModel):
                 parent=parent
             ).execute()
 
-            new_params = self.kwargs_from_google(self.tasklist, res)
+            new_params = self.google_to_kwargs(self.tasklist, res)
             old_params = self.dict()
 
             for field in self.Meta.internal_fields:

@@ -165,7 +165,7 @@ class NotionStatus(NotionTagBase):
 
 
 class NotionLabel(NotionTagBase):
-    
+
     class Meta:
         notion_field_name = "Labels"
         notion_field_type = "multi_select"
@@ -204,6 +204,27 @@ class NotionTime(NotionBaseModel):
     def __eq__(self, other) -> bool:
         return self.dt == other.dt and self.has_time == other.has_time
 
+class NotionBucket(NotionBaseModel):
+    # Notion fields
+    notion_id: str | None = None
+    title: str | None = None
+
+    @classmethod
+    def notion_to_kwargs(cls, response: dict) -> dict:
+        """Converts the response from Notion to a dict that can be passed to a
+        NotionBucket as keyword arguments
+        """
+        params = {
+            "notion_id": response["id"],
+            "title": response["properties"]["Title"]["title"][0]["plain_text"]
+        }
+
+        return params
+
+    @classmethod
+    def from_notion(cls, response: dict):
+        """Creates a NotionBucket from a Notion bucket response"""
+        return cls(**cls.notion_to_kwargs(response))
 
 class NotionTask(NotionBaseModel):
     # Notion Fields
@@ -275,5 +296,27 @@ class NotionTaskDB(NotionDatabaseModel):
     def get(cls, id: str, **kwargs):
         page_res = notion_client.pages.retrieve(id, **kwargs)
         # Check that it actually comes from the db
-        assert page_res["parent"]["database_id"].replace("-", "") == cls.Meta.database_id
+class NotionBuckets(NotionDatabaseModel):
+    class Meta:
+        model = NotionBucket
+        database_id = settings.notion_bucket_db
+
+    def __init__(self):
+        return
+
+    @classmethod
+    def get(cls, id:str=None, **kwargs) -> NotionBucket:
+        page_res = notion_client.pages.retrieve(id, **kwargs)
+        # Check that it actually comes from the db
+        assert page_res["parent"]["database_id"] == cls.Meta.database_id
         return cls.Meta.model.from_notion(page_res)
+
+    def get_by_title(self, title:str) -> NotionBucket:
+        """Fetch bucket by title
+
+        Args:
+            title (str, optional): [description]. Defaults to None.
+        """
+        for bucket in self.list():
+                if bucket.title == title:
+                    return bucket

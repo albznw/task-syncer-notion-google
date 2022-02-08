@@ -1,12 +1,12 @@
 from app.models.mongo import GoogleTaskRepository, NotionTaskRepository
-from app.tests.fixtures import mongo_fixture
+from app.tests.fixtures import mongo_fixture, setup_notion_test_tasks
 from app.models.notion import NotionTask, NotionTasks
 from app.models.google import GoogleStatus, GoogleTask
 from app.config import settings
 
 class TestNotionTaskRepository:
-    def test_mongo(self, mongo_fixture):
-        task_before_save = next(NotionTasks().list())
+    def test_mongo(self, mongo_fixture, setup_notion_test_tasks):
+        task_before_save, _ = setup_notion_test_tasks
         NotionTaskRepository.save(task_before_save)
 
         task_gen = NotionTaskRepository.find()

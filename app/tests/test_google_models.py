@@ -1,7 +1,7 @@
 import pytest
 from datetime import datetime, date
 
-from app.models.google import GoogleTasks, GoogleTask, GoogleStatus
+from app.models.google import GoogleTaskList, GoogleTaskLists, GoogleTasks, GoogleTask, GoogleStatus
 from app.config import settings
 
 
@@ -108,10 +108,23 @@ class TestGoogleTask:
         updated_task.google_delete()
 
 
+######################## Test the GoogleTaskLists model ########################
+
+class TestGoogleTaskLists:
+    def test_list_google_task_lists(self):
+        lists = list(GoogleTaskLists.list())
+        assert len(lists) > 0
+        assert isinstance(lists[0], GoogleTaskList)
+
+
 ########################## Test the GoogleTasks model ##########################
 # The one used for listing tasks and fetching tasks
 
 class TestGoogleTasks:
+    def test_meta_class(self):
+        g_tasks = GoogleTasks()
+        assert isinstance(g_tasks.Meta.tasklists[0], GoogleTaskList)
+
     def test_list_dev_tasks(self, setup_tasks):
         tasks = list(GoogleTasks.list(dev_tasklist_id))
         assert len(tasks) == 2

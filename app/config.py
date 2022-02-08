@@ -59,6 +59,8 @@ class Settings():
 
 
 class BaseSettings():
+    # Logger
+    logger: logging.Logger
     app_name: str
 
     # Mongo credentials
@@ -83,6 +85,8 @@ class TestSettings():
         print("Loading test.env")
         env = dotenv_values("test.env")
 
+        self.logger = setup_logger()
+        self.logger.info("Setting up test environment...")
         self.app_name = "TaskSyncer Notion-Google (TEST)"
 
         # Mongo credentials
@@ -98,6 +102,8 @@ class TestSettings():
 
         # Google
         self.google_default_tasklist = env.get("GOOGLE_DEFAULT_TASKLIST")
+        
+        self.logger.info("Done")
 
 if os.environ.get("ENV") == "TEST":
     settings = TestSettings()

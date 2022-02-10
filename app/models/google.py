@@ -1,7 +1,6 @@
 from os import path
 from enum import Enum
 from datetime import datetime
-from signal import raise_signal
 from typing import List, Tuple
 
 from google.auth.transport.requests import Request
@@ -226,10 +225,13 @@ class GoogleTaskLists(MongoDBModel):
         res = client.tasklists().list(maxResults=100, **kwargs).execute()
         if items := res.get("items"):
             for tasklist in items:
-                yield cls.Meta.model(
-                    tasklist=tasklist["id"],
-                    title=tasklist["title"]
-                )
+                try:
+                    yield cls.Meta.model(
+                        tasklist=tasklist["id"],
+                        title=tasklist["title"]
+                    )
+                except GeneratorExit:
+                    pass
 
     @classmethod
     def get(cls, id:str=None, title:str=None) -> GoogleTaskList:
@@ -267,8 +269,11 @@ class GoogleTasks(MongoDBModel):
             google_res = client.tasks().list(tasklist=tasklist_id, maxResults=100, **kwargs).execute()
             if google_res.get("items"):
                 for task in google_res["items"]:
-                    yield cls.Meta.model.from_google(
-                        tasklist_id=tasklist_id, google_task=task)
+                    try:
+                        yield cls.Meta.model.from_google(
+                            tasklist_id=tasklist_id, google_task=task)
+                    except GeneratorExit:
+                        pass
             else:
                 return []
     

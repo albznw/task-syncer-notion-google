@@ -121,7 +121,7 @@ class GoogleSyncer:
             if i_task.google_id not in synced_task_ids:
                 # Remove internal task, this should remove the internal-
                 # and external Notion task as well
-                logger.debug('--x ({i_task.title}) Task removed in Google')
+                logger.debug(f'--x ({i_task.title}) Task removed in Google')
                 try:
                     if sync_notion:
                         i_notion_task: NotionTask = next(NotionTaskRepository.find(

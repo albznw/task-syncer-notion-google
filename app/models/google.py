@@ -253,7 +253,7 @@ class GoogleTasks(MongoDBModel):
         tasklists: List[GoogleTaskList] = list(GoogleTaskLists().list())
 
     @classmethod
-    def list(cls, tasklist_id:str= None, **kwargs):
+    def list(cls, tasklist_id:str=None, **kwargs):
         """Returns a generator function of the tasks of the given tasklist. If
         no tasklist is specified all tasks are returned.
 
@@ -274,8 +274,6 @@ class GoogleTasks(MongoDBModel):
                             tasklist_id=tasklist_id, google_task=task)
                     except GeneratorExit:
                         pass
-            else:
-                return []
     
     @classmethod
     def get(cls, tasklist_id: str, task_id: str, **kwargs) -> GoogleTask:

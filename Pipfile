@@ -8,12 +8,12 @@ notion-client = "*"
 google-api-python-client = "*"
 google-auth-httplib2 = "*"
 google-auth-oauthlib = "*"
-pytest = "*"
 mongomantic = "*"
-pymongo = "*"
+python-dotenv = "*"
 
 [dev-packages]
 autopep8 = "*"
+pytest = "*"
 
 [requires]
 python_version = "3.10"

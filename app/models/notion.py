@@ -81,6 +81,7 @@ class NotionTagBase(NotionBaseModel):
         db_resp = notion_client.databases.retrieve(notion_tasks_db_id)
         field_values = []
         for value in db_resp["properties"][cls.Meta.notion_field_name][cls.Meta.notion_field_type]["options"]:
+            value["notion_id"] = value.pop("id")
             field_values.append(cls(**value))
         return field_values
 
@@ -147,9 +148,12 @@ class NotionDatabaseModel(NotionBaseModel):
         while True:
             for task in db_res["results"]:
                 try:
-                    yield self.Meta.model.from_notion(task)
-                except:
-                    yield task
+                    try:
+                        yield self.Meta.model.from_notion(task)
+                    except:
+                        yield task
+                except GeneratorExit:
+                    pass
 
             if db_res["has_more"]:
                 db_res = notion_client.databases.query(

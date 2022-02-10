@@ -68,6 +68,10 @@ class NotionSyncer:
                 return i_task
 
         except:
+            if not n_task.bucket_id:
+                logger.info("Task does not have a bucket, do not sync to Google")
+                return
+
             logger.debug('--> New task')
 
             try:
@@ -106,7 +110,10 @@ class NotionSyncer:
             synced_task = self.sync_task(n_task, sync_google=sync_google)
             self.synced_tasks.append(synced_task)
 
-        synced_task_ids = [task.notion_id for task in self.synced_tasks]
+        synced_task_ids = []
+        for task in self.synced_tasks:
+            if task:
+                synced_task_ids.append(task.notion_id)
 
         for i_task in NotionTaskRepository.find():
             if i_task.notion_id not in synced_task_ids:

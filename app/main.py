@@ -8,8 +8,8 @@ logger = settings.logger
 sleep_time = 60
 
 # First time syncing
-google_syncer = GoogleSyncer()
 notion_syncer = NotionSyncer()
+google_syncer = GoogleSyncer()
 
 while True:
     notion_syncer.sync()

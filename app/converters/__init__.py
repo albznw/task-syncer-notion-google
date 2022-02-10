@@ -9,9 +9,10 @@ status_mapper = settings.status_mapper
 
 
 def notion_to_google_status(n_status: NotionStatus) -> GoogleStatus:
-    for status in status_mapper:
-        if status["notion"]["notion_id"] == n_status.notion_id:
-            return GoogleStatus(status["google"]["name"])
+    if n_status:
+        for status in status_mapper:
+            if status["notion"]["notion_id"] == n_status.notion_id:
+                return GoogleStatus(status["google"]["name"])
 
     # Default to "todo"
     return GoogleStatus.todo
@@ -33,8 +34,11 @@ def notion_to_google_task(n_task: NotionTask) -> GoogleTask:
     Returns:
         [GoogleTask]: An instance of a GoogleTask version of sent task
     """
-    tasklist_id = GoogleTaskLists.get(
-        title=NotionBuckets.get(n_task.bucket_id).title).tasklist
+    try:
+        tasklist_id = GoogleTaskLists.get(
+            title=NotionBuckets.get(n_task.bucket_id).title).tasklist
+    except:
+        tasklist_id = settings.google_default_tasklist
 
     g_parent_id = None
     if n_task.parent_task_ids:

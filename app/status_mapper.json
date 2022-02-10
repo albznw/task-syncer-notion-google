@@ -1,0 +1,42 @@
+[
+    {
+        "google": {
+            "name": "needsAction"
+        },
+        "notion": {
+            "notion_id": "c062eac1-aff7-4c30-b4bb-76656a4c5495",
+            "name": "ToDo",
+            "color": "red"
+        }
+    },
+    {
+        "google": {
+            "name": "needsAction"
+        },
+        "notion": {
+            "notion_id": "be9a06e6-c0e8-428c-bfdd-17a3fd895a74",
+            "name": "Ongoing task",
+            "color": "green"
+        }
+    },
+    {
+        "google": {
+            "name": "completed"
+        },
+        "notion": {
+            "notion_id": "8be52672-830d-4447-86d2-1072bb266d92",
+            "name": "Done",
+            "color": "orange"
+        }
+    },
+    {
+        "google": {
+            "name": "needsAction"
+        },
+        "notion": {
+            "notion_id": "a172d018-fe50-4f53-acad-486e204c42a4",
+            "name": "Ongoing project",
+            "color": "purple"
+        }
+    }
+]

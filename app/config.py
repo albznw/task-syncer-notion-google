@@ -16,20 +16,20 @@ def setup_logger() -> logging.Logger:
     logger.setLevel(logging.DEBUG)
     return logger
 
-def read_notion_config() -> dict:
-    notion_settings_file_name = "notion_settings.json"
-    notion_settings_file_path = os.path.join(os.path.dirname(__file__), notion_settings_file_name)
-    if not os.path.exists(notion_settings_file_path):
+def read_status_mapper() -> dict:
+    status_mapper_file_name = "status_mapper.json"
+    status_mapper_file_path = os.path.join(os.path.dirname(__file__), status_mapper_file_name)
+    if not os.path.exists(status_mapper_file_path):
         print(
-            f"The file {notion_settings_file_name} is missing from app "
+            f"The file {status_mapper_file_name} is missing from app "
             "directory. You have to run setup.py to configure Notion."
         )
         exit(0)
     
-    with open(notion_settings_file_path, "r") as f:
-        notion_settings = json.load(f)
+    with open(status_mapper_file_path, "r") as f:
+        status_mapper = json.load(f)
 
-    return notion_settings
+    return status_mapper
 
 
 class BaseSettings():
@@ -51,8 +51,11 @@ class BaseSettings():
     # Google
     google_default_tasklist: str
 
+    # Mapper
+    status_mapper: dict
 
-class Settings():
+
+class Settings(BaseSettings):
     def __init__(self):
         print("PRODCUTION SETTINGS")
         print("Loading .env")
@@ -75,11 +78,14 @@ class Settings():
 
         # Google
         self.google_default_tasklist = env.get("GOOGLE_DEFAULT_TASKLIST")
+
+        # Mapper
+        self.status_mapper = read_status_mapper()
         
         self.logger.info("Done")
 
 
-class TestSettings():
+class TestSettings(BaseSettings):
 
     def __init__(self):
         print("TEST SETTINGS")
@@ -103,6 +109,9 @@ class TestSettings():
 
         # Google
         self.google_default_tasklist = env.get("GOOGLE_DEFAULT_TASKLIST")
+
+        # Mapper
+        self.status_mapper = read_status_mapper()
         
         self.logger.info("Done")
 

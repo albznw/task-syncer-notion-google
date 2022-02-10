@@ -1,37 +1,26 @@
 from app.models.mongo import GoogleTaskRepository, NotionTaskRepository
 from app.models.notion import NotionBuckets, NotionStatus, NotionTask, NotionTime
-from app.models.google import GoogleStatus, GoogleTask, GoogleTaskLists, GoogleTasks
+from app.models.google import GoogleStatus, GoogleTask, GoogleTaskLists
 from app.config import settings
 
-notion_todo = NotionStatus(
-    notion_id="c062eac1-aff7-4c30-b4bb-76656a4c5495", name="ToDo", color="red")
-notion_ongoing_task = NotionStatus(
-    notion_id="be9a06e6-c0e8-428c-bfdd-17a3fd895a74", name="Ongoing task", color="green")
-notion_ongoing_project = NotionStatus(
-    notion_id="a172d018-fe50-4f53-acad-486e204c42a4", name="Ongoing project", color="purple")
-notion_done = NotionStatus(
-    notion_id="8be52672-830d-4447-86d2-1072bb266d92", name="Done", color="orange")
 
-status_mapper = [
-    {"google": GoogleStatus.todo, "notion": notion_todo},
-    {"google": GoogleStatus.todo, "notion": notion_ongoing_task},
-    {"google": GoogleStatus.todo, "notion": notion_ongoing_project},
-    {"google": GoogleStatus.done, "notion": notion_done},
-]
+
+status_mapper = settings.status_mapper
 
 
 def notion_to_google_status(n_status: NotionStatus) -> GoogleStatus:
     for status in status_mapper:
-        if status["notion"] == n_status:
-            return status["google"]
+        if status["notion"]["notion_id"] == n_status.notion_id:
+            return GoogleStatus(status["google"]["name"])
 
     # Default to "todo"
     return GoogleStatus.todo
 
+
 def google_to_notion_status(g_status: GoogleStatus) -> NotionStatus | None:
     for status in status_mapper:
-        if status["google"] == g_status:
-            return status["notion"]
+        if status["google"]["name"] == g_status.value:
+            return NotionStatus(**status["notion"])
 
 
 def notion_to_google_task(n_task: NotionTask) -> GoogleTask:
@@ -61,6 +50,10 @@ def notion_to_google_task(n_task: NotionTask) -> GoogleTask:
             g_parent_id = g_parent.google_id
         except:
             raise RuntimeError("Parent task did not exist internaly")
+    
+    due = None
+    if n_task.due:
+        due = n_task.due.datetime()
 
     google_params = {
         "google_id": n_task.google_id,
@@ -69,7 +62,7 @@ def notion_to_google_task(n_task: NotionTask) -> GoogleTask:
         "notes": n_task.notes,
         "status": notion_to_google_status(n_task.status),
         "parent": g_parent_id,
-        "due": n_task.due.datetime(),
+        "due": due,
         "synced": n_task.synced,
         "notion_id": n_task.notion_id,
     }

@@ -459,5 +459,5 @@ class NotionBuckets(NotionDatabaseModel):
             title (str, optional): [description]. Defaults to None.
         """
         for bucket in self.list():
-                if bucket.title == title:
-                    return bucket
+            if bucket.title == title:
+                return bucket

@@ -1,6 +1,6 @@
 
 
-from datetime import date, datetime
+from datetime import datetime
 from typing import List
 
 from app.models.google import GoogleTask, GoogleTasks
@@ -35,17 +35,18 @@ class GoogleSyncer:
                 i_task.synced = datetime.now()
                 
                 if sync_notion:
-                    i_notion_task: NotionTask = next(NotionTaskRepository.find(notion_id=i_task.notion_id))
+                    old_i_notion_task: NotionTask = next(NotionTaskRepository.find(notion_id=i_task.notion_id))
 
-                    i_notion_task = i_notion_task.update_from_params(
+                    i_notion_task = old_i_notion_task.update_from_params(
                         google_to_notion_task(i_task).dict(
-                            exlude={*NotionTask.Meta.internal_fields}
+                            exclude={*NotionTask.Meta.internal_fields, "updated", "subtask_ids"}
                         )
                     )
-                    i_notion_task = i_notion_task.notion_save()
-                    i_notion_task = NotionTaskRepository.save(i_notion_task)
 
-                i_task = GoogleTaskRepository.save(i_task)
+                    i_notion_task = i_notion_task.notion_save()
+                    i_notion_task = NotionTaskRepository.update(i_notion_task)
+
+                i_task = GoogleTaskRepository.update(i_task)
                 return i_task
 
             elif g_task.updated < i_task.updated:
@@ -60,9 +61,9 @@ class GoogleSyncer:
                         notion_id=i_task.notion_id
                     ))
                     notion_task.synced = sync_time
-                    notion_task = NotionTaskRepository.save(notion_task)
+                    notion_task = NotionTaskRepository.update(notion_task)
 
-                i_task = GoogleTaskRepository.save(i_task)
+                i_task = GoogleTaskRepository.update(i_task)
                 return i_task
             
             else:
@@ -79,6 +80,12 @@ class GoogleSyncer:
                     notion_task = google_to_notion_task(g_task)
                     notion_task = notion_task.notion_save()
 
+                    if notion_task.parent_task_ids:
+                        # Newly created task has parents, update them internally
+                        parent_task = next(NotionTaskRepository.find(notion_id=notion_task.parent_task_ids[0]))
+                        parent_task = parent_task.fetch()
+                        NotionTaskRepository.update(parent_task)
+
                     g_task.notion_id = notion_task.notion_id
                     notion_task = NotionTaskRepository.save(notion_task)
 
@@ -87,6 +94,7 @@ class GoogleSyncer:
 
             except RuntimeError:
                 if fix_parent:
+                    logger.info("Parent error, fixing parent")
                     # Get parent task from Google and sync parent
                     google_parent_task = GoogleTasks.get(
                         g_task.tasklist, g_task.parent)

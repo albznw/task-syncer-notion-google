@@ -42,9 +42,9 @@ class NotionSyncer:
                         )
                     )
                     i_google_task = i_google_task.google_save()
-                    i_google_task = GoogleTaskRepository.save(i_google_task)
+                    i_google_task = GoogleTaskRepository.update(i_google_task)
                     
-                i_task = NotionTaskRepository.save(i_task)
+                i_task = NotionTaskRepository.update(i_task)
                 return i_task
 
             elif n_task.updated < i_task.updated:
@@ -58,9 +58,9 @@ class NotionSyncer:
                     google_task: GoogleTask = next(GoogleTaskRepository.find(
                         google_id=i_task.google_id))
                     google_task.synced = sync_time
-                    google_task = GoogleTaskRepository.save(google_task)
+                    google_task = GoogleTaskRepository.update(google_task)
 
-                i_task = NotionTaskRepository.save(i_task)
+                i_task = NotionTaskRepository.update(i_task)
                 return i_task
             
             else:
@@ -70,6 +70,10 @@ class NotionSyncer:
         except:
             if not n_task.bucket_id:
                 logger.info("Task does not have a bucket, do not sync to Google")
+                return
+
+            if not n_task.status:
+                logger.info("Task does not have status set, do not sync to Google")
                 return
 
             logger.debug('--> New task')

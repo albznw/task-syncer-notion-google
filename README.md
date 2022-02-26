@@ -1,2 +1,5 @@
-# task-syncer-notion-google
-A small service providing an integration between Notion tasks and Google tasks
+# TaskSyncer Notion <-> Google
+A small service providing an integration between Notion tasks (a database containing tasks) and Google tasks.
+
+## Instructions
+...coming soon
